@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Beyond Canvas — Starry Night + Left Menu</title>
+  <meta name="description" content="Van Gogh–inspired 'Starry Night' theme with a collapsible left menu for Beyond Canvas." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: "#0f172a",
+            night1: "#0b1d3a",
+            night2: "#0e264f",
+            gold: "#f6d36c",
+          },
+          fontFamily: {
+            sans: ["Inter","ui-sans-serif","system-ui"],
+            display: ["Playfair Display","serif"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root{
+      --night-1:#0b1d3a;
+      --night-2:#0e264f;
+      --gold:#f6d36c;
+      --gold-soft:#ffefa9;
+    }
+    html,body{height:100%}
+    body{
+      background:
+        radial-gradient(1200px 900px at 10% 5%, rgba(64,118,196,0.15), transparent 60%),
+        radial-gradient(900px 700px at 85% 12%, rgba(28,79,167,0.18), transparent 60%),
+        radial-gradient(800px 600px at 40% 92%, rgba(10,120,112,0.16), transparent 60%),
+        linear-gradient(180deg, var(--night-2), var(--night-1));
+      color:#f7fafc;
+      -webkit-font-smoothing:antialiased;
+    }
+    .impasto{position:fixed; inset:0; z-index:-2; pointer-events:none; opacity:.12;
+      background:
+        repeating-conic-gradient(from 30deg at 20% 20%, rgba(255,255,255,.0) 0 16deg, rgba(255,255,255,.4) 16deg 18deg, rgba(255,255,255,.0) 18deg 34deg),
+        repeating-conic-gradient(from -10deg at 70% 35%, rgba(255,255,255,.0) 0 14deg, rgba(255,255,255,.35) 14deg 16deg, rgba(255,255,255,.0) 16deg 32deg),
+        repeating-conic-gradient(from 5deg at 50% 75%, rgba(255,255,255,.0) 0 18deg, rgba(255,255,255,.35) 18deg 20deg, rgba(255,255,255,.0) 20deg 36deg);
+      mix-blend-mode: overlay; filter: blur(1.2px) contrast(1.05);
+    }
+    .stars{position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.45;
+      background:
+        radial-gradient(80px 80px at 18% 18%, var(--gold-soft), transparent 60%),
+        radial-gradient(70px 70px at 30% 22%, var(--gold), transparent 60%),
+        radial-gradient(90px 90px at 62% 16%, var(--gold), transparent 60%),
+        radial-gradient(60px 60px at 74% 30%, var(--gold-soft), transparent 60%),
+        radial-gradient(80px 80px at 14% 62%, var(--gold), transparent 60%),
+        radial-gradient(70px 70px at 80% 72%, var(--gold), transparent 60%);
+      filter: blur(.4px) saturate(1.15);
+    }
+    .glass{backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);background:rgba(10,22,44,.55);border:1px solid rgba(255,255,255,.15);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+    .glass-light{backdrop-filter:saturate(160%) blur(16px);-webkit-backdrop-filter:saturate(160%) blur(16px);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+    .wood-frame{background:linear-gradient(135deg,#9b6c45,#c09a73,#805a40);border:6px solid #5f3e2b;border-radius:14px;box-shadow:inset 0 2px 0 rgba(255,255,255,.15), inset 0 -2px 4px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.5)}
+    .mat{margin:10px;background:#f9f7f2;border:1px solid #e7e3d9;border-radius:10px;box-shadow:inset 0 2px 6px rgba(0,0,0,.08)}
+    .canvas{margin:14px;border-radius:8px;background:#fff;border:1px solid #eae6dd;overflow:hidden}
+    a, a:visited{color:#ffef9a} a:hover{color:#ffe066}
+    .btn{padding:.7rem 1.1rem;border-radius:9999px;font-weight:700;display:inline-flex;align-items:center;gap:.5rem}
+    .btn-primary{background:linear-gradient(135deg,#ffd86b,#f6c04c);color:#1a1a1a}
+    .btn-outline{border:1px solid rgba(255,255,255,.35);color:#fff}
+
+    /* Sidebar */
+    .sidebar{position:fixed; top:0; left:0; height:100%; width:260px; padding:14px; transition: width .25s ease, transform .25s ease; z-index:50}
+    .sidebar .logo{display:flex;align-items:center;gap:.6rem;margin-bottom:.6rem}
+    .sidebar .nav a{display:flex; align-items:center; gap:.6rem; padding:.65rem .8rem; border-radius:.8rem; color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06)}
+    .sidebar .nav a:hover{background:rgba(255,255,255,.12)}
+    .sidebar.collapsed{width:68px}
+    .sidebar.collapsed .label{display:none}
+    .sidebar.collapsed .logo-text{display:none}
+    .sidebar.collapsed .hide-btn span{display:none}
+    .sidebar.collapsed .hide-btn{justify-content:center}
+    .sidebar.hidden{transform:translateX(-100%)}
+
+    /* Show button when sidebar hidden */
+    .show-sidebar{position:fixed; top:16px; left:16px; z-index:40; display:none}
+    .sidebar.hidden + .show-sidebar{display:inline-flex}
+
+    /* Main content shifts */
+    .content{margin-left:280px; transition: margin-left .25s ease}
+    .content.narrow{margin-left:88px}
+    .content.full{margin-left:20px}
+    @media (max-width: 1024px){
+      .content{margin-left:20px}
+      .sidebar{transform:translateX(-100%)}
+      .show-sidebar{display:inline-flex}
+    }
+  </style>
+</head>
+<body class="font-sans">
+
+<!-- Background layers -->
+<div class="impasto"></div>
+<div class="stars"></div>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar glass" aria-label="Primary">
+  <div class="logo">
+    <span class="inline-block w-8 h-8 rounded-full" style="background:conic-gradient(from 0deg,#ffe066,#7cc6ff,#a0e7e5,#ffd166,#ffe066)"></span>
+    <span class="font-display text-lg logo-text">Beyond Canvas</span>
+  </div>
+  <nav class="nav grid gap-2 mt-2">
+    <a href="#hero" aria-label="Home"><span>🏠</span><span class="label">Home</span></a>
+    <a href="#gallery" aria-label="Gallery"><span>🖼️</span><span class="label">Gallery</span></a>
+    <a href="#studio" aria-label="Studio"><span>🎨</span><span class="label">Studio</span></a>
+    <a href="#access" aria-label="Access"><span>♿</span><span class="label">Access</span></a>
+    <a href="#community" aria-label="Community"><span>👥</span><span class="label">Community</span></a>
+    <a href="#pricing" aria-label="Pricing"><span>💳</span><span class="label">Pricing</span></a>
+    <a href="#investors" aria-label="Investors"><span>💼</span><span class="label">Investors</span></a>
+  </nav>
+  <div class="mt-3 grid gap-2">
+    <a class="btn btn-primary" href="#gallery">Enter Gallery</a>
+    <a class="btn btn-outline" href="#studio">Open Studio</a>
+  </div>
+  <button id="hideBtn" class="hide-btn btn btn-outline mt-3 w-full" aria-expanded="true" aria-controls="sidebar">
+    <span>Hide menu</span> <span aria-hidden="true">⬅</span>
+  </button>
+  <button id="collapseBtn" class="btn btn-outline mt-2 w-full" aria-pressed="false">
+    Collapse to icons
+  </button>
+</aside>
+
+<!-- Show button (visible when sidebar hidden or on mobile) -->
+<button id="showBtn" class="show-sidebar btn btn-primary" aria-controls="sidebar" aria-expanded="false">☰ Menu</button>
+
+<!-- Main content -->
+<div id="content" class="content">
+  <!-- Hero -->
+  <section id="hero" class="mx-auto max-w-7xl px-6 lg:px-10 pt-8 pb-8">
+    <div class="glass-light p-6">
+      <h1 class="font-display text-5xl leading-tight text-white">The Living Gallery — <span class="text-[#ffef9a]">Starry Night</span> Edition</h1>
+      <p class="mt-3 text-white/90 max-w-3xl">Van Gogh–inspired swirling sky with clean, accessible UI. Painterly ambiance; business‑ready content.</p>
+      <div class="mt-5 flex flex-wrap gap-3">
+        <a href="#gallery" class="btn btn-primary">Explore Rooms</a>
+        <a href="#studio" class="btn btn-outline">Create with AI</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery" class="py-8">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <div class="glass-light p-6">
+        <h2 class="font-display text-3xl text-white">Gallery Rooms</h2>
+        <p class="text-white/90 mt-1">Artified frames and watercolor visuals.</p>
+        <div class="mt-6 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          <article class="wood-frame">
+            <div class="mat"><div class="canvas aspect-[4/3]"></div></div>
+          </article>
+          <article class="wood-frame">
+            <div class="mat"><div class="canvas aspect-[4/3]"></div></div>
+          </article>
+          <article class="wood-frame">
+            <div class="mat"><div class="canvas aspect-[4/3]"></div></div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Studio -->
+  <section id="studio" class="py-8">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <div class="glass-light p-6 grid lg:grid-cols-2 gap-8 items-center">
+        <div>
+          <h2 class="font-display text-3xl text-white">Create Together — Human × AI</h2>
+          <p class="mt-2 text-white/90">Sketch, speak, or upload. Exhibit with one click and choose licensing.</p>
+          <ul class="mt-4 text-white/90 space-y-2">
+            <li>• Voice-to-Canvas & Text-to-Scene</li>
+            <li>• Public / Private projects with remix controls</li>
+            <li>• Export PNG / MP4 / SVG / GLB</li>
+          </ul>
+        </div>
+        <div class="wood-frame"><div class="mat"><div class="canvas aspect-video flex items-center justify-center text-sm text-slate-700">🎨 Studio UI Preview</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Access / Community / Pricing / Investors -->
+  <section id="access" class="py-4">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <div class="glass-light p-6"><h2 class="font-display text-3xl text-white">Access for All</h2><p class="text-white/90">Keyboard nav, labeled controls, high‑contrast, captions, color‑blind palettes.</p></div>
+    </div>
+  </section>
+
+  <section id="community" class="py-6">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10 grid lg:grid-cols-3 gap-6">
+      <div class="glass-light p-6 text-white/90"><h3 class="font-display text-2xl text-white mb-2">Open Calls & Challenges</h3>Monthly prompts and juried features.</div>
+      <div class="glass-light p-6 text-white/90"><h3 class="font-display text-2xl text-white mb-2">Micro‑Patronage</h3>Tip, subscribe, co‑commission.</div>
+      <div class="glass-light p-6 text-white/90"><h3 class="font-display text-2xl text-white mb-2">Schools & Libraries</h3>Free edu plan, safe‑mode curation.</div>
+    </div>
+  </section>
+
+  <section id="pricing" class="py-8">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <div class="glass-light p-6">
+        <h2 class="font-display text-3xl text-white">Simple, Inclusive Pricing</h2>
+        <div class="mt-6 grid gap-6 sm:grid-cols-3 text-white">
+          <div class="border border-white/20 rounded-xl p-6"><div class="text-sm text-white/80">FREE</div><div class="text-3xl font-display">$0</div><ul class="mt-3 text-sm text-white/90 space-y-1"><li>Unlimited viewing</li><li>5 public canvases</li></ul></div>
+          <div class="border-4 border-yellow-400/60 rounded-xl p-6"><div class="text-sm text-white/80">CREATOR</div><div class="text-3xl font-display">$19/mo</div><ul class="mt-3 text-sm text-white/90 space-y-1"><li>Unlimited canvases</li><li>Sell prints/licenses</li></ul></div>
+          <div class="border border-white/20 rounded-xl p-6"><div class="text-sm text-white/80">STUDIO / EDU</div><div class="text-3xl font-display">Custom</div><ul class="mt-3 text-sm text-white/90 space-y-1"><li>Multi‑seat & roles</li><li>On‑site installations</li></ul></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="investors" class="py-10">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10 grid lg:grid-cols-2 gap-8 items-center">
+      <div class="glass-light p-6">
+        <h2 class="font-display text-3xl text-white">Invest in the Creative Commons Economy</h2>
+        <p class="mt-3 text-white/90">200K+ monthly visitors · 1.5M artworks · partnerships across museums and festivals.</p>
+        <a href="#" class="btn btn-primary mt-4">Download Pitch Deck</a>
+      </div>
+      <div class="wood-frame"><div class="mat"><div class="canvas aspect-video flex items-center justify-center text-sm text-slate-700">💼 Investor Preview</div></div></div>
+    </div>
+  </section>
+
+  <footer class="py-8">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10 flex items-center justify-between text-white/80">
+      <span>© <span id="year"></span> Beyond Canvas</span>
+      <a href="#hero" class="underline">Back to top</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const content = document.getElementById('content');
+  const hideBtn = document.getElementById('hideBtn');
+  const collapseBtn = document.getElementById('collapseBtn');
+  const showBtn = document.getElementById('showBtn');
+
+  // Hide/Show sidebar (off-canvas)
+  function hideSidebar(){
+    sidebar.classList.add('hidden');
+    showBtn.style.display = 'inline-flex';
+    showBtn.setAttribute('aria-expanded','true');
+    content.classList.add('full');
+    content.classList.remove('narrow');
+    hideBtn.setAttribute('aria-expanded','false');
+  }
+  function showSidebar(){
+    sidebar.classList.remove('hidden');
+    showBtn.style.display = 'none';
+    showBtn.setAttribute('aria-expanded','false');
+    if (sidebar.classList.contains('collapsed')){
+      content.classList.add('narrow');
+    } else {
+      content.classList.remove('narrow');
+    }
+    hideBtn.setAttribute('aria-expanded','true');
+  }
+  hideBtn.addEventListener('click', ()=>{
+    if (sidebar.classList.contains('hidden')){
+      showSidebar();
+    } else {
+      hideSidebar();
+    }
+  });
+  showBtn.addEventListener('click', showSidebar);
+
+  // Collapse to icon-only width
+  collapseBtn.addEventListener('click', ()=>{
+    const collapsed = sidebar.classList.toggle('collapsed');
+    collapseBtn.setAttribute('aria-pressed', String(collapsed));
+    if (collapsed){
+      content.classList.add('narrow');
+    } else {
+      content.classList.remove('narrow');
+    }
+  });
+
+  // Initialize
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
